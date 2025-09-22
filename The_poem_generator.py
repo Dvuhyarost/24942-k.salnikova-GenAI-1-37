@@ -1,86 +1,41 @@
 from transformers import pipeline
 import re
 import random
-import os
 
 def get_file_path(filename):
     """
-    Возвращает абсолютный путь к файлу в директории скрипта.
+    Returns the absolute path to the file in the script directory.
 
-    Параметры
+    Parameters
     ----------
     filename : str
-        Имя файла или директории
+        The name of the file
 
-    Возвращает
+    Returns
     -------
     str
-        Абсолютный путь к файлу
+        Absolute path to the file
     """
+    import os
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
 
-def initialize_generator():
-    """
-    Инициализирует генератор текста с запросом пути к модели.
-
-    Возвращает
-    -------
-    pipeline
-        Инициализированный пайплайн для генерации текста
-
-    Исключения
-    ----------
-    FileNotFoundError
-        Если директория с моделью не существует
-    ValueError
-        Если указанный путь не является директорией
-    """
-    print("\n" + "="*50)
-    print("🎭 ГЕНЕРАТОР ВЕСЕННИХ СТИХОТВОРЕНИЙ")
-    print("="*50)
-    
-    # Запрашиваем путь к модели
-    model_path = input("Введите путь к директории с моделью: ").strip()
-    
-    # Если путь пустой, используем текущую директорию
-    if not model_path:
-        model_path = "."
-        print(f"Используется текущая директория: {os.path.abspath(model_path)}")
-    
-    # Преобразуем относительный путь в абсолютный
-    if not os.path.isabs(model_path):
-        model_path = os.path.abspath(model_path)
-    
-    # Проверяем существование директории
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Директория не существует: {model_path}")
-    
-    if not os.path.isdir(model_path):
-        raise ValueError(f"Это не директория: {model_path}")
-    
-    print(f"✅ Загружаем модель из: {model_path}")
-    
-    # Инициализируем пайплайн
-    generator = pipeline(
-        "text-generation",
-        model=model_path,
-        tokenizer=model_path,
-        device=-1  # Используем CPU
-    )
-    
-    print("✅ Модель успешно загружена!")
-    return generator
+# Инициализация пайплайна для генерации текста с использованием локальной модели
+generator = pipeline(
+    "text-generation",
+    model=get_file_path("."),  # Путь к локальной модели
+    tokenizer=get_file_path(".")  # Путь к локальному токенизатору
+)
 
 def count_syllables(word):
     """
     Подсчитывает количество слогов в слове по количеству гласных.
 
-    Параметры
+    Parameters
     ----------
     word : str
         Слово для анализа
 
-    Возвращает
+    Returns
     -------
     int
         Количество слогов в слове
@@ -92,12 +47,12 @@ def count_syllables_in_last_word(text):
     """
     Подсчитывает количество слогов в последнем слове строки.
 
-    Параметры
+    Parameters
     ----------
     text : str
         Текстовая строка для анализа
 
-    Возвращает
+    Returns
     -------
     int
         Количество слогов в последнем слове
@@ -114,12 +69,12 @@ def get_rhyme_vowel(text):
     """
     Извлекает последнюю гласную из последнего слова строки для рифмы.
 
-    Параметры
+    Parameters
     ----------
     text : str
         Текстовая строка для анализа
 
-    Возвращает
+    Returns
     -------
     str or None
         Последняя гласная буква или None если не найдена
@@ -141,12 +96,12 @@ def get_rhyme_vowel_group(vowel):
     """
     Возвращает группу фонетически соответствующих гласных.
 
-    Параметры
+    Parameters
     ----------
     vowel : str
         Гласная буква
 
-    Возвращает
+    Returns
     -------
     list
         Список фонетически соответствующих гласных
@@ -169,14 +124,14 @@ def check_rhyme(target_vowel, current_vowel):
     """
     Проверяет, рифмуются ли гласные с учетом фонетических соответствий.
 
-    Параметры
+    Parameters
     ----------
     target_vowel : str
         Целевая гласная для рифмы
     current_vowel : str
         Текущая гласная для проверки
 
-    Возвращает
+    Returns
     -------
     bool
         True если гласные рифмуются, иначе False
@@ -191,12 +146,12 @@ def get_rhyme_group_display(vowel):
     """
     Форматирует группу рифмующихся гласных для красивого отображения.
 
-    Параметры
+    Parameters
     ----------
     vowel : str
         Гласная буква
 
-    Возвращает
+    Returns
     -------
     str
         Форматированная строка с группой гласных
@@ -214,12 +169,12 @@ def get_stress_pattern(text):
     """
     Определяет ударение в последнем слове строки.
 
-    Параметры
+    Parameters
     ----------
     text : str
         Текстовая строка для анализа
 
-    Возвращает
+    Returns
     -------
     tuple or None
         Кортеж (гласная, позиция, слово) или None если не удалось определить
@@ -301,14 +256,14 @@ def get_rhyme_type_by_stress(position, word_length):
     """
     Определяет тип рифмы по положению ударения.
 
-    Параметры
+    Parameters
     ----------
     position : int
         Позиция ударной гласной в слове
     word_length : int
         Длина слова в символах
 
-    Возвращает
+    Returns
     -------
     str
         Тип рифмы: мужская, женская, дактилическая, гипердактилическая
@@ -322,194 +277,11 @@ def get_rhyme_type_by_stress(position, word_length):
     else:
         return "гипердактилическая"
 
-def clean_poem_line(text):
-    """
-    Очищает строку от всех символов, кроме русских букв и пробелов.
-
-    Параметры
-    ----------
-    text : str
-        Исходный текст
-
-    Возвращает
-    -------
-    str
-        Очищенный текст
-    """
-    # Удаляем все, кроме русских букв, пробелов и дефиса
-    cleaned = re.sub(r'[^а-яёА-ЯЁ\s-]', '', text)
-    # Удаляем лишние пробелы
-    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-    # Удаляем дефисы в начале и конце строки
-    cleaned = cleaned.strip('-')
-    return cleaned
-
-def is_valid_poem_line(text, min_words=3, max_words=8):
-    """
-    Проверяет валидность строки стихотворения.
-
-    Параметры
-    ----------
-    text : str
-        Текст для проверки
-    min_words : int, optional
-        Минимальное количество слов (по умолчанию 3)
-    max_words : int, optional
-        Максимальное количество слов (по умолчанию 8)
-
-    Возвращает
-    -------
-    bool
-        True если строка валидна, иначе False
-    """
-    if not text:
-        return False
-    words = text.split()
-    # Проверяем количество слов и наличие только русских букв
-    if len(words) < min_words or len(words) > max_words:
-        return False
-    # Проверяем, что все слова состоят только из русских букв
-    for word in words:
-        if not re.match(r'^[а-яёА-ЯЁ-]+$', word):
-            return False
-    return True
-
-def is_duplicate_line(new_line, existing_lines):
-    """
-    Проверяет наличие повторений строк.
-
-    Параметры
-    ----------
-    new_line : str
-        Новая строка
-    existing_lines : list
-        Существующие строки
-
-    Возвращает
-    -------
-    bool
-        True если есть повторение, иначе False
-    """
-    if not new_line:
-        return False
-    new_lower = new_line.lower()
-    for existing_line in existing_lines:
-        if existing_line and new_lower == existing_line.lower():
-            return True
-    return False
-
-def check_stress_compatibility(new_line, target_stress_info):
-    """
-    Проверяет соответствие ударения в новой строке целевому.
-
-    Параметры
-    ----------
-    new_line : str
-        Новая строка
-    target_stress_info : tuple
-        Информация об ударении целевой строки
-
-    Возвращает
-    -------
-    bool
-        True если ударение совпадает, иначе False
-    """
-    if not target_stress_info:
-        return True
-        
-    new_stress = get_stress_pattern(new_line)
-    if not new_stress:
-        return False
-        
-    vowel_new, position_new, word_new = new_stress
-    vowel_target, position_target, word_target = target_stress_info
-    
-    # Проверяем тип рифмы (должен совпадать)
-    rhyme_type_new = get_rhyme_type_by_stress(position_new, len(word_new))
-    rhyme_type_target = get_rhyme_type_by_stress(position_target, len(word_target))
-    
-    return rhyme_type_new == rhyme_type_target
-
-def evaluate_line_quality(new_line, target_stress_info, target_syllables, rhyme_vowel):
-    """
-    Оценивает качество строки по нескольким параметрам.
-
-    Параметры
-    ----------
-    new_line : str
-        Новая строка для оценки
-    target_stress_info : tuple
-        Информация об ударении целевой строки
-    target_syllables : int
-        Целевое количество слогов
-    rhyme_vowel : str
-        Целевая гласная для рифмы
-
-    Возвращает
-    -------
-    tuple
-        Кортеж (оценка качества, список проблем)
-    """
-    quality_score = 0
-    issues = []
-    
-    # Проверяем рифму (самый важный параметр)
-    if rhyme_vowel:
-        current_rhyme_vowel = get_rhyme_vowel(new_line)
-        if not check_rhyme(rhyme_vowel, current_rhyme_vowel):
-            quality_score -= 100  # Большой штраф за плохую рифму
-            issues.append("плохая рифма")
-    
-    # Проверяем ударение
-    if target_stress_info:
-        if not check_stress_compatibility(new_line, target_stress_info):
-            quality_score -= 50  # Штраф за несовпадение ударения
-            issues.append("несовпадение ударения")
-    
-    # Проверяем количество слогов
-    new_syllables = count_syllables_in_last_word(new_line)
-    syllables_diff = abs(new_syllables - target_syllables)
-    if syllables_diff > 0:
-        quality_score -= syllables_diff * 10  # Штраф за разницу в слогах
-        issues.append(f"разница в слогах: {syllables_diff}")
-    
-    # Бонус за идеальное соответствие
-    if syllables_diff == 0 and not issues:
-        quality_score += 20
-    
-    return quality_score, issues
-
-def get_rhyme_target(line_num, scheme):
-    """
-    Определяет, с какой строкой должна рифмоваться текущая.
-
-    Параметры
-    ----------
-    line_num : int
-        Номер текущей строки
-    scheme : str
-        Схема рифмовки
-
-    Возвращает
-    -------
-    int or None
-        Номер строки для рифмы или None
-    """
-    if scheme == "1-2 и 3-4":
-        if line_num == 1: return 0  # 2-я строка рифмуется с 1-й
-        if line_num == 3: return 2  # 4-я строка рифмуется с 3-й
-    return None
-
-def generate_spring_poem(generator):
+def generate_spring_poem():
     """
     Генерирует полное весеннее стихотворение.
 
-    Параметры
-    ----------
-    generator : pipeline
-        Пайплайн для генерации текста
-
-    Возвращает
+    Returns
     -------
     tuple
         Кортеж (строки стихотворения, схема рифмовки, информация об ударении, количество слогов)
@@ -525,13 +297,191 @@ def generate_spring_poem(generator):
     selected_scheme = random.choice(rhyme_schemes)
     print(f"Генерируем весеннее стихотворение с рифмовкой: {selected_scheme}")
     
-    # Настройки генерации
+    def clean_poem_line(text):
+        """
+        Очищает строку от всех символов, кроме русских букв и пробелов.
+
+        Parameters
+        ----------
+        text : str
+            Исходный текст
+
+        Returns
+        -------
+        str
+            Очищенный текст
+        """
+        # Удаляем все, кроме русских букв, пробелов и дефиса
+        cleaned = re.sub(r'[^а-яёА-ЯЁ\s-]', '', text)
+        # Удаляем лишние пробелы
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        # Удаляем дефисы в начале и конце строки
+        cleaned = cleaned.strip('-')
+        return cleaned
+    
+    def get_rhyme_target(line_num, scheme):
+        """
+        Определяет, с какой строкой должна рифмоваться текущая.
+
+        Parameters
+        ----------
+        line_num : int
+            Номер текущей строки
+        scheme : str
+            Схема рифмовки
+
+        Returns
+        -------
+        int or None
+            Номер строки для рифмы или None
+        """
+        if scheme == "1-2 и 3-4":
+            if line_num == 1: return 0  # 2-я строка рифмуется с 1-й
+            if line_num == 3: return 2  # 4-я строка рифмуется с 3-й
+        return None
+    
+    def is_valid_poem_line(text, min_words=3, max_words=8):
+        """
+        Проверяет валидность строки стихотворения.
+
+        Parameters
+        ----------
+        text : str
+            Текст для проверки
+        min_words : int, optional
+            Минимальное количество слов
+        max_words : int, optional
+            Максимальное количество слов
+
+        Returns
+        -------
+        bool
+            True если строка валидна, иначе False
+        """
+        if not text:
+            return False
+        words = text.split()
+        # Проверяем количество слов и наличие только русских букв
+        if len(words) < min_words or len(words) > max_words:
+            return False
+        # Проверяем, что все слова состоят только из русских букв
+        for word in words:
+            if not re.match(r'^[а-яёА-ЯЁ-]+$', word):
+                return False
+        return True
+    
+    def is_duplicate_line(new_line, existing_lines):
+        """
+        Проверяет наличие повторений строк.
+
+        Parameters
+        ----------
+        new_line : str
+            Новая строка
+        existing_lines : list
+            Существующие строки
+
+        Returns
+        -------
+        bool
+            True если есть повторение, иначе False
+        """
+        if not new_line:
+            return False
+        new_lower = new_line.lower()
+        for existing_line in existing_lines:
+            if existing_line and new_lower == existing_line.lower():
+                return True
+        return False
+    
+    def check_stress_compatibility(new_line, target_stress_info):
+        """
+        Проверяет соответствие ударения в новой строке целевому.
+
+        Parameters
+        ----------
+        new_line : str
+            Новая строка
+        target_stress_info : tuple
+            Информация об ударении целевой строки
+
+        Returns
+        -------
+        bool
+            True если ударение совпадает, иначе False
+        """
+        if not target_stress_info:
+            return True
+            
+        new_stress = get_stress_pattern(new_line)
+        if not new_stress:
+            return False
+            
+        vowel_new, position_new, word_new = new_stress
+        vowel_target, position_target, word_target = target_stress_info
+        
+        # Проверяем тип рифмы (должен совпадать)
+        rhyme_type_new = get_rhyme_type_by_stress(position_new, len(word_new))
+        rhyme_type_target = get_rhyme_type_by_stress(position_target, len(word_target))
+        
+        return rhyme_type_new == rhyme_type_target
+    
+    def evaluate_line_quality(new_line, target_stress_info, target_syllables, rhyme_vowel):
+        """
+        Оценивает качество строки по нескольким параметрам.
+
+        Parameters
+        ----------
+        new_line : str
+            Новая строка для оценки
+        target_stress_info : tuple
+            Информация об ударении целевой строки
+        target_syllables : int
+            Целевое количество слогов
+        rhyme_vowel : str
+            Целевая гласная для рифмы
+
+        Returns
+        -------
+        tuple
+            Кортеж (оценка качества, список проблем)
+        """
+        quality_score = 0
+        issues = []
+        
+        # Проверяем рифму (самый важный параметр)
+        if rhyme_vowel:
+            current_rhyme_vowel = get_rhyme_vowel(new_line)
+            if not check_rhyme(rhyme_vowel, current_rhyme_vowel):
+                quality_score -= 100  # Большой штраф за плохую рифму
+                issues.append("плохая рифма")
+        
+        # Проверяем ударение
+        if target_stress_info:
+            if not check_stress_compatibility(new_line, target_stress_info):
+                quality_score -= 50  # Штраф за несовпадение ударения
+                issues.append("несовпадение ударения")
+        
+        # Проверяем количество слогов
+        new_syllables = count_syllables_in_last_word(new_line)
+        syllables_diff = abs(new_syllables - target_syllables)
+        if syllables_diff > 0:
+            quality_score -= syllables_diff * 10  # Штраф за разницу в слогах
+            issues.append(f"разница в слогах: {syllables_diff}")
+        
+        # Бонус за идеальное соответствие
+        if syllables_diff == 0 and not issues:
+            quality_score += 20
+        
+        return quality_score, issues
+    
+    # Настройки генерации с адаптивными параметрами для разных строк
     generation_settings = {
-        "temperature": 0.85,
-        "top_p": 0.92,
-        "repetition_penalty": 1.3,
-        "max_new_tokens": 20,
-        "top_k": 50
+        "temperature": 0.85,       # Баланс между креативностью и предсказуемостью
+        "top_p": 0.92,             # Нуклеус-сэмплинг: учитываем только 92% наиболее вероятных слов
+        "repetition_penalty": 1.3, # Штраф за повторения
+        "max_new_tokens": 20,      # Максимальная длина генерируемого текста
+        "top_k": 50                # Ограничение на количество рассматриваемых вариантов
     }
     
     # Генерация 4 строк стихотворения
@@ -564,9 +514,10 @@ def generate_spring_poem(generator):
             target_syllables = count_syllables_in_last_word(rhyme_target_text)
             target_stress_info = first_line_stress_info if rhyme_target_num == 0 else None
         
-        # Формируем промпт
+        # Формируем промпт в зависимости от номера строки и схемы рифмовки
         if line_num == 0:
             prompt = "Напиши первую строку весеннего стихотворения о природе, 4-7 слов, с выразительным окончанием:"
+        
         else:
             previous_lines = "\n".join(poem_lines[:line_num])
             
@@ -574,6 +525,7 @@ def generate_spring_poem(generator):
                 target_line_num = rhyme_target_num + 1
                 vowels_str = "', '".join(allowed_vowels)
                 
+                # Добавляем информацию об ударении и слогах в промпт
                 prompt = f"Продолжи весеннее стихотворение. Строка {line_num+1} должна рифмоваться со строкой {target_line_num}{stress_requirement}{syllables_requirement} (допустимые рифмы: '{vowels_str}'):\n{previous_lines}\nСтрока {line_num+1}:"
             else:
                 prompt = f"Продолжи весеннее стихотворение:\n{previous_lines}\nСтрока {line_num+1}:"
@@ -583,12 +535,13 @@ def generate_spring_poem(generator):
         best_line = None
         best_quality = float('-inf')
         best_issues = []
+        candidate_lines = []
         
         for attempt in range(max_attempts):
-            # Настраиваем параметры для повторных попыток
+            # Настраиваем параметры для повторных попыток (увеличиваем температуру для разнообразия)
             current_temp = generation_settings["temperature"] + (attempt * 0.02)
             
-            # Генерация текста
+            # Генерация текста с использованием модели
             result = generator(
                 prompt,
                 max_new_tokens=generation_settings["max_new_tokens"],
@@ -620,6 +573,8 @@ def generate_spring_poem(generator):
                     new_line, target_stress_info, target_syllables, rhyme_vowel
                 )
                 
+                candidate_lines.append((new_line, quality_score, issues))
+                
                 # Сохраняем лучший вариант
                 if quality_score > best_quality:
                     best_line = new_line
@@ -630,7 +585,7 @@ def generate_spring_poem(generator):
                 if quality_score >= 0 and not issues:
                     poem_lines.append(new_line)
                     
-                    # Выводим информацию о рифме
+                    # Выводим информацию о рифме и ударении
                     if rhyme_vowel:
                         target_line_num = rhyme_target_num + 1
                         current_vowel = get_rhyme_vowel(new_line)
@@ -667,86 +622,89 @@ def generate_spring_poem(generator):
                 else:
                     print(f"✓ Строка {line_num+1}: {best_line}")
             else:
-                # Генерируем простую строку
-                simple_prompt = "Напиши строку весеннего стихотворения:"
-                result = generator(simple_prompt, max_new_tokens=15)
-                new_line = clean_poem_line(result[0]['generated_text'].replace(simple_prompt, "").strip())
-                if is_valid_poem_line(new_line):
+                # Пробуем сгенерировать без строгой проверки
+                print(f"⚠ Не удалось найти хорошую рифму, пробуем без строгих ограничений")
+                simplified_prompt = prompt.replace("должна рифмоваться", "должна продолжаться")
+                simplified_prompt = re.sub(r" с .*? рифмой", "", simplified_prompt)
+                simplified_prompt = re.sub(r" и \d+ слогами", "", simplified_prompt)
+                
+                result = generator(
+                    simplified_prompt,
+                    max_new_tokens=generation_settings["max_new_tokens"],
+                    num_return_sequences=1,
+                    do_sample=True,
+                    temperature=0.9,
+                    top_p=0.95
+                )
+                full_text = result[0]['generated_text']
+                new_line = clean_poem_line(full_text.replace(simplified_prompt, "").strip())
+                if (is_valid_poem_line(new_line) and 
+                    not is_duplicate_line(new_line, poem_lines)):
                     poem_lines.append(new_line)
-                    print(f"✓ Строка {line_num+1} (простая): {new_line}")
+                    print(f"✓ Строка {line_num+1} (без строгой рифмы): {new_line}")
                 else:
                     poem_lines.append("")
                     print(f"✗ Строка {line_num+1}: [не сгенерировалась]")
     
     return poem_lines, selected_scheme, first_line_stress_info, first_line_syllables
 
-def main():
-    """
-    Основная функция программы.
-    """
-    try:
-        # Инициализируем генератор
-        generator = initialize_generator()
+# Основной цикл генерации - повторяем пока не получим полное стихотворение
+max_attempts = 8
+final_poem = None
+final_scheme = None
+final_stress_info = None
+final_syllables = 0
+
+for attempt in range(1, max_attempts + 1):
+    print(f"\n{'='*60}")
+    print(f"ПОПЫТКА ГЕНЕРАЦИИ #{attempt}")
+    print(f"{'='*60}")
+    
+    poem_lines, scheme, stress_info, syllables = generate_spring_poem()
+    
+    # Проверяем, все ли строки сгенерировались
+    all_lines_valid = all(line != "" for line in poem_lines)
+    
+    if all_lines_valid:
+        print(f"\n Успешно сгенерировано полное стихотворение за {attempt} попыток!")
+        final_poem = poem_lines
+        final_scheme = scheme
+        final_stress_info = stress_info
+        final_syllables = syllables
+        break
+    else:
+        print(f"\n Попытка {attempt}: не все строки сгенерировались, пробуем снова...")
         
-        # Основной цикл генерации
-        max_attempts = 8
-        final_poem = None
-        final_scheme = None
-        final_stress_info = None
-        final_syllables = 0
-
-        for attempt in range(1, max_attempts + 1):
-            print(f"\n{'='*60}")
-            print(f"ПОПЫТКА ГЕНЕРАЦИИ #{attempt}")
-            print(f"{'='*60}")
-            
-            poem_lines, scheme, stress_info, syllables = generate_spring_poem(generator)
-            
-            # Проверяем, все ли строки сгенерировались
-            all_lines_valid = all(line != "" for line in poem_lines)
-            
-            if all_lines_valid:
-                print(f"\n✅ Успешно сгенерировано полное стихотворение за {attempt} попыток!")
-                final_poem = poem_lines
-                final_scheme = scheme
-                final_stress_info = stress_info
-                final_syllables = syllables
-                break
-            else:
-                print(f"\n⚠ Попытка {attempt}: не все строки сгенерировались, пробуем снова...")
-                
-                if attempt < max_attempts:
-                    print("Перезапускаем генерацию...\n")
-                else:
-                    print("Достигнуто максимальное количество попыток.")
-                    final_poem = poem_lines
-                    final_scheme = scheme
-                    final_stress_info = stress_info
-                    final_syllables = syllables
-
-        # Вывод итогового стихотворения
-        print("\n" + "="*60)
-        print("ФИНАЛЬНОЕ ВЕСЕННЕЕ СТИХОТВОРЕНИЕ:")
-        print(f"Схема рифмовки: {final_scheme}")
-        if final_stress_info:
-            vowel, position, word = final_stress_info
-            rhyme_type = get_rhyme_type_by_stress(position, len(word))
-            print(f"Тип рифмы: {rhyme_type} (ударение на '{vowel}' в позиции {position+1} слова '{word}')")
-            print(f"Количество слогов в первой строке: {final_syllables}")
-        print("="*60)
-
-        if final_poem and any(line != "" for line in final_poem):
-            for i, line in enumerate(final_poem, 1):
-                if line:
-                    print(f"{i}. {line}")
-                else:
-                    print(f"{i}. [не сгенерировалась]")
+        # Подсчитываем количество пропущенных строк
+        empty_lines = sum(1 for line in poem_lines if line == "")
+        print(f"Пропущено строк: {empty_lines}")
+        
+        if attempt < max_attempts:
+            print("Перезапускаем генерацию...\n")
         else:
-            print("Не удалось сгенерировать стихотворение.")
-            
-    except Exception as e:
-        print(f"\n❌ Критическая ошибка: {e}")
-        print("Программа завершена.")
+            print("Достигнуто максимальное количество попыток.")
+            # Используем последнюю попытку, даже если не все строки идеальны
+            final_poem = poem_lines
+            final_scheme = scheme
+            final_stress_info = stress_info
+            final_syllables = syllables
 
-if __name__ == "__main__":
-    main()
+# Вывод итогового стихотворения
+print("\n" + "="*60)
+print("ФИНАЛЬНОЕ ВЕСЕННЕЕ СТИХОТВОРЕНИЕ:")
+print(f"Схема рифмовки: {final_scheme}")
+if final_stress_info:
+    vowel, position, word = final_stress_info
+    rhyme_type = get_rhyme_type_by_stress(position, len(word))
+    print(f"Тип рифмы: {rhyme_type} (ударение на '{vowel}' в позиции {position+1} слова '{word}')")
+    print(f"Количество слогов в первой строке: {final_syllables}")
+print("="*60)
+
+if final_poem and any(line != "" for line in final_poem):
+    for i, line in enumerate(final_poem, 1):
+        if line:
+            print(f"{i}. {line}")
+        else:
+            print(f"{i}. [не сгенерировалась]")
+else:
+    print("Не удалось сгенерировать стихотворение.")

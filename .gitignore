@@ -1,0 +1,8 @@
+
+.model/*
+
+*.tmp
+*.temp
+
+*.dll
+*.exe
